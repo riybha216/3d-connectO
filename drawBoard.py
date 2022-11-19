@@ -1,8 +1,10 @@
 """
 To-dos:
-* Put coins in appropriate slots
-* allow them to stack
-* update board when coins are added
+* [DONE] Put coins in appropriate slots
+* [DONE] allow them to stack
+* [DONE] update board when coins are added
+* [DONE] solve index out of bounds error when column filled
+* [DONE] switch players
 * check board for win
 
 * make home screen (2 options w/ buttons)
@@ -19,17 +21,28 @@ def appStarted(app):
     app.cols = 7
     app.margin = 30
     app.currentPress = (-1, -1) # out of bounds coordinate
-    app.color = "yellow"
-    app.board = [None for i in range(app.cols) for j in range(app.rows)]
+    app.color = "red"
+    app.board = [[None for i in range(app.cols)] for j in range(app.rows)]
+    app.colors = [("red", "yellow"), ("yellow", "red")]
+
+def switchPlayers(app):
+    print(app.color)
+    if app.color == "red":
+        app.color = "yellow"
+    else:
+        app.color = "red"
+    print(app.color)
+    print(app.board)
+    """for color in app.colors:
+        if app.color == color[0]:
+            app.color = color[1]
+    print(app.color)"""
 
 def getBoard(app):
     print(app.board)
     return app.board
 
-def update(app):
-    return
-
-# getCell and getCellBounds functions adapted from 
+# getCell function inspired from
 # https://www.cs.cmu.edu/~112/notes/notes-animations-part2.html
 def getCell(app, x, y):
     if not(x <= app.width - app.margin and x >= app.margin and y >= 0 and
@@ -40,11 +53,29 @@ def getCell(app, x, y):
     cellWidth  = gridWidth / app.cols
     cellHeight = gridHeight / app.rows
 
-    row = int((y - app.margin) / cellHeight)
+    row = 5 - int((y - app.margin) / cellHeight)
     col = int((x - app.margin) / cellWidth)
 
-    return (row, col)
+    (nRow, nCol) = enableStacking(app, row, col)
 
+    print(nRow, nCol)
+    return (nRow, nCol)
+
+# recursive func bc we need to find the next empty cell to put the coin in
+# and that is not necessarily app.board[row - 1][col]
+def enableStacking(app, row, col):
+    if row == -1:
+        return (-1, -1)
+    elif app.board[row][col] == None:
+        return (row, col)
+    else:
+        return enableStacking(app, row - 1, col)
+
+def update(app, row, col):
+    app.board[row][col] = app.color
+
+# getCellBounds function taken from 
+# https://www.cs.cmu.edu/~112/notes/notes-animations-part2.html
 def getCellBounds(app, row, col):
     gridWidth  = app.width - 2*app.margin
     gridHeight = app.height - 2*app.margin
@@ -66,18 +97,25 @@ def mousePressed(app, event):
         app.currentPress = getCell(app, x, y)
     else:
         app.currentPress = (-1, -1)
+    (row, col) = getCell(app, x, y)
+    if row != -1:
+        update(app, row, col)
+        switchPlayers(app)
 
 def redrawAll(app, canvas):
     canvas.create_rectangle(app.margin, app.margin, 
                             app.width - app.margin, app.height - app.margin,
                             fill="black")
-    
-    for row in range(app.rows):
-        for col in range(app.cols):
+
+    for row in range(len(app.board)):
+        for col in range(len(app.board[0])):
             (x0, y0, x1, y1) = getCellBounds(app, row, col)
-            fill = f"{app.color}" if (app.currentPress == (row, col)) else "white"
+            if app.board[row][col] != None or app.currentPress == (row, col):
+                fill = app.board[row][col]
+            else:
+                fill = "white"
+
             canvas.create_oval(x0+20, y0+10, x1-20, y1-10, fill=fill)
-            update(app)
 
 
 runApp(width=600, height=400)
