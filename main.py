@@ -224,6 +224,11 @@ def getScores(subset):
 # https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-1-introduc
 # tion/#:~:text=Minimax%20is%20a%20kind%20of,%2C%20Mancala%2C%20Chess%2C%20etc.
 
+# I also found the concepts in the following tic-tac-toe minimax algorithm tutorial useful:
+# https://www.freecodecamp.org/news/minimax-algorithm-guide-how-to-create-an-unbeatable-ai/
+# The above also influenced the idea of adding scores to allow certain moves to be more
+# preferable to others.
+
 def minimax(app, board, depth, optimization, alpha, beta):
     locs = findOpenLoc(app)
     if isTerminal(app):
