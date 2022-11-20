@@ -111,6 +111,10 @@ def findIfWon(app, move, row, col, originalPiece, count):
 def quitGame(app, canvas):
     gameOver(app, canvas)
 
+# algorithm idea and theory inspired from
+# https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-
+# set-4-alpha-beta-pruning/
+
 def sortThroughWinningMoves(app, playerColor):
     for col in range(app.cols - 3):
         for row in range(app.rows):
@@ -164,6 +168,9 @@ def findOpenLoc(app):
             if app.board[r][c] == None:
                 validSpots.append(c)
     return validSpots
+
+# the idea of implementing scores for the minimax algorithm was taken from
+# https://www.mygreatlearning.com/blog/alpha-beta-pruning-in-ai/
 
 def getLists(app):
     currScore = 0
