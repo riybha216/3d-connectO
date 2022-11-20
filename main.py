@@ -8,8 +8,9 @@ To-dos:
 * [DONE] check board for win
 
 * make home screen (2 options w/ buttons)
-* human human mode should be done
+* [DONE] human human mode should be done
 * make AI minimax player on board
+* add alpha beta pruning too (-inf, +inf)
 
 * do some 3D experimentation
 """
@@ -17,7 +18,7 @@ To-dos:
 from cmu_112_graphics import *
 
 def appStarted(app):
-    app.page = 1
+    app.page = 0
     app.rows = 6
     app.cols = 7
     app.margin = 30
@@ -122,20 +123,33 @@ def findIfWon(app, move, row, col, originalPiece, count):
 def quitGame(app, canvas):
     gameOver(app, canvas)
 
+def pointToHumanVsHumanMode(app, x, y):
+    return (app.width//2 - 140 <= x <= app.width//2 - 40, 
+            app.height // 2 + app.margin <= x <= app.height//2 + (2 * app.margin))
+
+def pointToHumanVsAIMode(app, x, y):
+    return
+
 # while not directly accessed while writing this function,
 # this mousePressed function is inspired from 
 # https://www.cs.cmu.edu/~112/notes/notes-animations-part2.html
 def mousePressed(app, event):
     x = event.x
     y = event.y
-    if app.currentPress != getCell(app, x, y):
-        app.currentPress = getCell(app, x, y)
-    else:
-        app.currentPress = (-1, -1)
-    (row, col) = getCell(app, x, y)
-    if row != -1:
-        update(app, row, col)
-        switchPlayers(app)
+    if app.page == 0:
+        if pointToHumanVsHumanMode(app, x, y):
+            app.page = 1
+        elif pointToHumanVsAIMode(app, x, y):
+            app.page = 2
+    if app.page == 1:
+        if app.currentPress != getCell(app, x, y):
+                app.currentPress = getCell(app, x, y)
+        else:
+            app.currentPress = (-1, -1)
+        (row, col) = getCell(app, x, y)
+        if row != -1:
+            update(app, row, col)
+            switchPlayers(app)
 
 def drawHomeScreen(app, canvas):
     canvas.create_rectangle(0, 0, app.width, app.height, fill="light blue")
@@ -143,6 +157,17 @@ def drawHomeScreen(app, canvas):
                         fill="black", font="Arial 35 bold")
     canvas.create_text(app.width/2, 110, text="Choose a mode to begin.", 
                         fill="black", font="Arial 20")
+    canvas.create_rectangle(app.width//2 - 140, app.height // 2 + app.margin, 
+                            app.width//2 - 40, app.height//2 + (2 * app.margin),
+                            fill="white")
+    canvas.create_text(app.width//2 - 90, (app.height // 2 + 1.5 * app.margin), 
+                        text="Two Player", fill="black", font="Arial 13 bold")
+    canvas.create_rectangle(app.width//2 + 140, app.height // 2 + app.margin, 
+                            app.width//2 + 40, app.height//2 + (2 * app.margin),
+                            fill="white")
+    canvas.create_text(app.width//2 + 90, (app.height // 2 + 1.5 * app.margin), 
+                        text="Human vs. AI", fill="black", font="Arial 13 bold")
+    
 
 def drawHumanToHumanGame(app, canvas):
     canvas.create_rectangle(app.margin, app.margin, 
