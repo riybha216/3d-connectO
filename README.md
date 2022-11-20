@@ -1,4 +1,5 @@
 # 112-term-project
 Term project for 15-112
+Riya Bhatia
 
-Code to be uploaded soon!
+Idea: 2.5D Connect4 Game
