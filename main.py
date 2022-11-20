@@ -227,7 +227,8 @@ def getScores(subset):
 # I also found the concepts in the following tic-tac-toe minimax algorithm tutorial useful:
 # https://www.freecodecamp.org/news/minimax-algorithm-guide-how-to-create-an-unbeatable-ai/
 # The above also influenced the idea of adding scores to allow certain moves to be more
-# preferable to others.
+# preferable to others; however, since the connect4 algorithm is much different, I did not base
+# my code on the above website.
 
 def minimax(app, board, depth, optimization, alpha, beta):
     locs = findOpenLoc(app)
