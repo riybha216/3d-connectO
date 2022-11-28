@@ -3,4 +3,11 @@ Term project for 15-112
 
 Riya Bhatia
 
-Idea: 2.5D Connect4 Game
+3D Connect4 is a game that 
+
+Features Implemented:
+- 3D board with clickable and responsive cells
+- Both height and grid rows & cols are adjustable
+- Clicking cells generates cubes, which are stackable
+- Win detection is implemented (win can occur with stackable cubes, and cubes on different levels of the 3d board)
+- Blue cube is wildcard that can be implemented by either player
