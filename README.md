@@ -3,7 +3,7 @@ Term project for 15-112
 
 Riya Bhatia
 
-3D Connect4 is a game that 
+Project: 3D Connect4
 
 Features Implemented:
 - 3D board with clickable and responsive cells
