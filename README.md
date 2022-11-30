@@ -5,7 +5,7 @@ Riya Bhatia
 
 Project: 3D Connect4
 
-Features Implemented:
+Features to be Implemented:
 - 3D board with clickable and responsive cells
 - Both height and grid rows & cols are adjustable
 - Clicking cells generates cubes, which are stackable
