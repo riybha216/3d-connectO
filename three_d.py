@@ -1,12 +1,12 @@
 """
 To meet MVP:
 - [DONE] make 3d board w/ cells and adjustable by height
-    - [KINDA DONE?] make it recognize where you click
-- if player clicks on cell, a cube pops up on cell
+- [BASICALLY DONE - a bit buggy?] make it recognize where you click
+- [MAIN TO DO] if player clicks on cell, a cube pops up on cell
 - you can stack cubes (up to 4 cubes)
 - [DONE] represent as a 3d list
 - do win detection
-- highlight whos turn it is
+- [tp3] highlight whos turn it is
 - do oop (maybe)
 
 tp3 features:
@@ -17,7 +17,6 @@ tp3 features:
 """
 
 from cmu_112_graphics import *
-from winDetection import *
 import copy
 import math
 
@@ -41,11 +40,63 @@ class ThreeDBoard:
         x3, y3 = x2 - self.widthMargin/2, y0
         return (x0, y0, x1, y1, x2, y2, x3, y3)
 
+class CreateCube:
+    def __init__(self, bottomFaceVertices):
+        self.bottomFaceVertices = bottomFaceVertices
+        self.points = []
+        self.projMatrix = [[1, 0, 0], [0, 1, 0], [0, 0, 0]]
+        self.projectedPoints = []
+        self.scale = 20
+
+    def getVertices(self):
+        twoDPoints = []
+        twoDPoints(self.bottomFaceVertices)
+        
+        
+
+class WinDetection:
+    def __init__(self, boards):
+        self.boards = boards
+
+    def detectHorizontalOnGrid(self):
+        for board in self.boards:
+            for row in board:
+                return
+
+            #print(board.board)
+
+    def detectVerticalOnGrid(self):
+        return
+
+    def detectVerticalAcrossGrids(self):
+        return
+
+    def detectPositiveDiagonalonGrid(self):
+        return
+
+    def detectPositiveDiagonalAcrossGrids(self):
+        return
+
+    def detectNegativeDiagonalonGrid(self):
+        return
+
+    def detectNegativeDiagonalAcrossGrids(self):
+        return
+
+    # use flatten?
+    def detectStack(self):
+        return
+
 def appStarted(app):
     app.selection = (-1, -1)
     app.numGrids = 4
     app.boards = []
     app.marginMultiplier = 3.6
+    app.currPlayer = None
+    app.players = {"red": "yellow"}
+
+def switchPlayers(app):
+    return
 
 def generateBoards(app):
     firstBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier)
@@ -71,9 +122,19 @@ def pointInGrid(app, x, y):
             print(board.board)
             return (r, c)
 
+def getClickedPoints(app):
+    pointList = []
+    for board in app.boards:
+        for row in range(board.rows):
+            for col in range(board.cols):
+                if board.board[row][col] != None:
+                    pointList.append(board.getCellBounds(row, col))
+
 def keyPressed(app, event):
     if event.key == 'd':
         generateBoards(app)
+        """win = WinDetection(app.boards)
+        win.detectHorizontalOnGrid()"""
 
 def mousePressed(app, event):
     print(pointInGrid(app, event.x, event.y))
@@ -94,4 +155,4 @@ def redrawAll(app, canvas):
                 canvas.create_polygon(x0, y0, x1, y1, x2, y2, x3, y3,
                 fill = fill, outline = "white")
 
-runApp(width=1000, height=760)
+runApp(width=700, height=760)
