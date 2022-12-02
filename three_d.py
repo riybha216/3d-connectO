@@ -1,12 +1,16 @@
 """
 To meet MVP:
-- [DONE] make 3d board w/ cells and adjustable by height
-- [BASICALLY DONE - a bit buggy?] make it recognize where you click
-- [MAIN TO DO] if player clicks on cell, a cube pops up on cell
+- [DONE] make 3d board w/ cells
+- make adjustable by height [make an input height, maybe by levels?]
+---> easy, medium, hard [4, 6, 8] by height
+- [DONE] make it recognize where you click
+- add place to click for cube and allow the cube to drop
+--> add animation for this
+- [DONE] if player clicks on cell, a cube pops up on cell
 - you can stack cubes (up to 4 cubes)
 - [DONE] represent as a 3d list
 - do win detection
-- [tp3] highlight whos turn it is
+- highlight whos turn it is
 - do oop (maybe)
 
 tp3 features:
@@ -30,7 +34,7 @@ class ThreeDBoard:
         self.marginMultiplier = marginMultiplier
         self.board = [[None for i in range(self.cols)] for j in range(self.rows)]
         self.widthMargin = self.width/10
-        self.heightMargin = self.height/30
+        self.heightMargin = self.height/40
 
     def getCellBounds(self, row, col):
         x0 = self.widthMargin + self.margin + ((col+row/2) * self.widthMargin)
@@ -44,26 +48,34 @@ class CreateCube:
     def __init__(self, bottomFaceVertices):
         self.bottomFaceVertices = bottomFaceVertices
         self.points = []
-        self.projMatrix = [[1, 0, 0], [0, 1, 0], [0, 0, 0]]
-        self.projectedPoints = []
-        self.scale = 20
+        self.height = 20
 
-    def getVertices(self):
-        twoDPoints = []
-        twoDPoints(self.bottomFaceVertices)
-        
-        
+    def getAllPoints(self):
+        topFacePoints = copy.copy(self.bottomFaceVertices)
+        self.points.append(self.bottomFaceVertices)
+        for idx in range(len(topFacePoints)):
+            if idx % 2 == 1:
+                topFacePoints[idx] -= self.height
+        self.points.append(topFacePoints)
+        print(self.points)
+        return self.points
 
 class WinDetection:
     def __init__(self, boards):
         self.boards = boards
 
     def detectHorizontalOnGrid(self):
+        tempList = []
         for board in self.boards:
-            for row in board:
-                return
+            for b in board.board:
+                tempList.append(b)
+                print(tempList)
 
-            #print(board.board)
+        for row in tempList:
+            for element in row:
+                if element != "orange":
+                    pass
+            return True
 
     def detectVerticalOnGrid(self):
         return
@@ -100,27 +112,37 @@ def switchPlayers(app):
 
 def generateBoards(app):
     firstBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier)
-    secondBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier + 3)
-    thirdBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier + 6)
-    fourthBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier + 9)
+    secondBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier + 2)
+    thirdBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier + 4)
+    fourthBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier + 6)
+    fifthBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier + 8)
     app.boards.append(firstBoard)
     app.boards.append(secondBoard)
     app.boards.append(thirdBoard)
     app.boards.append(fourthBoard)
+    app.boards.append(fifthBoard)
+    return firstBoard
 
 def pointInGrid(app, x, y):
-    for board in app.boards:
-        (x0, y0, x1, y1, x2, y2, x3, y3) = board.getCellBounds(0, 0)
+    pointsList = []
+    counter = 0
+    print(app.boards)
+    board = app.boards[0]
+    for i in range(4):
+        pointsList.append(board.getCellBounds(i, 0))
+    for points in pointsList:
+        (x0, y0, x1, y1, x2, y2, x3, y3) = points
         print(x0, x, x0+((x2-x1)*board.cols))
-        print(y0, y, y0+((y0-y1)*board.rows))
-        if not(x0 <= x <= x0+((x2-x1)*board.cols) and y0-((y0-y1)*board.rows) <= y <= y0):
+        print(y1, y, y0)
+        if not(x0 <= x <= x0+((x2-x1)*board.cols) and y1 <= y <= y0):
             pass
         else:
-            r = int((y - y2)*(-1)/board.heightMargin)
-            c = int((x - x1)/board.widthMargin)
+            r = counter
+            c = int((x - x0)/board.widthMargin)
             board.board[r][c] = "orange"
             print(board.board)
             return (r, c)
+        counter += 1
 
 def getClickedPoints(app):
     pointList = []
@@ -133,8 +155,8 @@ def getClickedPoints(app):
 def keyPressed(app, event):
     if event.key == 'd':
         generateBoards(app)
-        """win = WinDetection(app.boards)
-        win.detectHorizontalOnGrid()"""
+        win = WinDetection(app.boards)
+        print(win.detectHorizontalOnGrid())
 
 def mousePressed(app, event):
     print(pointInGrid(app, event.x, event.y))
@@ -146,13 +168,33 @@ def mousePressed(app, event):
         app.selection = (row, col)
         print(app.selection)
 
-def redrawAll(app, canvas):    
+def drawCube(app, canvas, bottomFacePoints):
+    c = CreateCube(bottomFacePoints)
+    allPoints = c.getAllPoints()
+    (x0, y0, x1, y1, x2, y2, x3, y3) = allPoints[0]
+    (nx0, ny0, nx1, ny1, nx2, ny2, nx3, ny3) = allPoints[1]
+    canvas.create_polygon(x0, y0, x1, y1, x2, y2, x3, y3,
+                fill = "red", outline="white")
+    canvas.create_polygon(x0, y0, nx0, ny0, nx3, ny3, x3, y3, fill="red", outline="white")
+    canvas.create_polygon(x3, y3, nx3, ny3, nx2, ny2, x2, y2, fill="red", outline="white")
+    canvas.create_polygon(x1, y1, nx1, ny1, nx2, ny2, x2, y2, fill="red", outline="white")
+    canvas.create_polygon(x0, y0, nx0, ny0, nx1, ny1, x1, y1, fill="red", outline="white")
+    canvas.create_polygon(nx0, ny0, nx1, ny1, nx2, ny2, nx3, ny3,
+                fill = "red", outline="white")
+
+def redrawAll(app, canvas):
     for board in app.boards:
         for row in range(board.rows):
             for col in range(board.cols):
                 (x0, y0, x1, y1, x2, y2, x3, y3) = board.getCellBounds(row, col)
-                fill = "orange" if (board.board[row][col] == "orange") else "darkBlue"
                 canvas.create_polygon(x0, y0, x1, y1, x2, y2, x3, y3,
-                fill = fill, outline = "white")
+                fill = "darkBlue", outline = "white")
 
-runApp(width=700, height=760)
+    for board in app.boards:
+        for row in range(board.rows):
+            for col in range(board.cols):
+                (x0, y0, x1, y1, x2, y2, x3, y3) = board.getCellBounds(row, col)
+                if board.board[row][col] == "orange":
+                    drawCube(app, canvas, [x0, y0, x1, y1, x2, y2, x3, y3])
+
+runApp(width=700, height=700)
