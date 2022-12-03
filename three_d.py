@@ -4,10 +4,9 @@ To meet MVP:
 - make adjustable by height [make an input height, maybe by levels?]
 ---> easy, medium, hard [4, 6, 8] by height
 - [DONE] make it recognize where you click
-- add place to click for cube and allow the cube to drop
---> add animation for this
+- [DONE] add place to click for cube and allow the cube to drop
+--> stop cube when it reaches target square
 - [DONE] if player clicks on cell, a cube pops up on cell
-- you can stack cubes (up to 4 cubes)
 - [DONE] represent as a 3d list
 - do win detection
 - highlight whos turn it is
@@ -48,7 +47,7 @@ class CreateCube:
     def __init__(self, bottomFaceVertices):
         self.bottomFaceVertices = bottomFaceVertices
         self.points = []
-        self.height = 20
+        self.height = 30
 
     def getAllPoints(self):
         topFacePoints = copy.copy(self.bottomFaceVertices)
@@ -106,6 +105,8 @@ def appStarted(app):
     app.marginMultiplier = 3.6
     app.currPlayer = None
     app.players = {"red": "yellow"}
+    app.bottomFacePoints = []
+    app.dy = 10
 
 def switchPlayers(app):
     return
@@ -152,7 +153,17 @@ def getClickedPoints(app):
                 if board.board[row][col] != None:
                     pointList.append(board.getCellBounds(row, col))
 
+def checkForOrange(app):
+    firstBoard = app.boards[0]
+    for row in range(firstBoard.rows):
+        for col in range(firstBoard.cols):
+            if firstBoard.board[row][col] == "orange":
+                (x0, y0, x1, y1, x2, y2, x3, y3) = firstBoard.getCellBounds(row, col)
+                app.bottomFacePoints.append([x0, y0, x1, y1, x2, y2, x3, y3])
+                return
+
 def keyPressed(app, event):
+    # if starter screen button pressed
     if event.key == 'd':
         generateBoards(app)
         win = WinDetection(app.boards)
@@ -160,27 +171,54 @@ def keyPressed(app, event):
 
 def mousePressed(app, event):
     print(pointInGrid(app, event.x, event.y))
+    app.bottomFacePoints.clear()
     if pointInGrid(app, event.x, event.y) == None:
         print("none")
         app.selection = (-1, -1)
     else:
         (row, col) = pointInGrid(app, event.x, event.y)
         app.selection = (row, col)
+        checkForOrange(app)
         print(app.selection)
+
+def reached(app):
+    return
+
+def timerFired(app):
+    if not reached(app):
+        if len(app.bottomFacePoints) == 0:
+            return
+        else:
+            points = app.bottomFacePoints[0]
+            for idx in range(len(points)):
+                if idx % 2 == 1:
+                    points[idx] += app.dy
+
+def drawMovingCube(app, canvas):
+    c = CreateCube(app.bottomFacePoints[0])
+    allPoints = c.getAllPoints()
+    (x0, y0, x1, y1, x2, y2, x3, y3) = allPoints[0]
+    (nx0, ny0, nx1, ny1, nx2, ny2, nx3, ny3) = allPoints[1]
+
+    canvas.create_polygon(x0, y0, x1, y1, x2, y2, x3, y3, fill = "red", outline="white")
+    canvas.create_polygon(x1, y1, nx1, ny1, nx2, ny2, x2, y2, fill="red", outline="white")
+    canvas.create_polygon(x0, y0, nx0, ny0, nx1, ny1, x1, y1, fill="red", outline="white")
+    canvas.create_polygon(x3, y3, nx3, ny3, nx2, ny2, x2, y2, fill="red", outline="white")
+    canvas.create_polygon(x0, y0, nx0, ny0, nx3, ny3, x3, y3, fill="red", outline="white")
+    canvas.create_polygon(nx0, ny0, nx1, ny1, nx2, ny2, nx3, ny3, fill = "red", outline="white")
 
 def drawCube(app, canvas, bottomFacePoints):
     c = CreateCube(bottomFacePoints)
     allPoints = c.getAllPoints()
     (x0, y0, x1, y1, x2, y2, x3, y3) = allPoints[0]
     (nx0, ny0, nx1, ny1, nx2, ny2, nx3, ny3) = allPoints[1]
-    canvas.create_polygon(x0, y0, x1, y1, x2, y2, x3, y3,
-                fill = "red", outline="white")
-    canvas.create_polygon(x0, y0, nx0, ny0, nx3, ny3, x3, y3, fill="red", outline="white")
-    canvas.create_polygon(x3, y3, nx3, ny3, nx2, ny2, x2, y2, fill="red", outline="white")
+
+    canvas.create_polygon(x0, y0, x1, y1, x2, y2, x3, y3, fill = "red", outline="white")
     canvas.create_polygon(x1, y1, nx1, ny1, nx2, ny2, x2, y2, fill="red", outline="white")
     canvas.create_polygon(x0, y0, nx0, ny0, nx1, ny1, x1, y1, fill="red", outline="white")
-    canvas.create_polygon(nx0, ny0, nx1, ny1, nx2, ny2, nx3, ny3,
-                fill = "red", outline="white")
+    canvas.create_polygon(x3, y3, nx3, ny3, nx2, ny2, x2, y2, fill="red", outline="white")
+    canvas.create_polygon(x0, y0, nx0, ny0, nx3, ny3, x3, y3, fill="red", outline="white")
+    canvas.create_polygon(nx0, ny0, nx1, ny1, nx2, ny2, nx3, ny3, fill = "red", outline="white")
 
 def redrawAll(app, canvas):
     for board in app.boards:
@@ -194,7 +232,12 @@ def redrawAll(app, canvas):
         for row in range(board.rows):
             for col in range(board.cols):
                 (x0, y0, x1, y1, x2, y2, x3, y3) = board.getCellBounds(row, col)
-                if board.board[row][col] == "orange":
-                    drawCube(app, canvas, [x0, y0, x1, y1, x2, y2, x3, y3])
+                pointsList = [x0, y0, x1, y1, x2, y2, x3, y3]
+                if app.boards[0].board[row][col] == "orange":
+                    drawMovingCube(app, canvas)
+                elif ((app.boards[1].board[row][col] == "orange") or 
+                    (app.boards[2].board[row][col] == "orange") or
+                    (app.boards[3].board[row][col] == "orange")):
+                    drawCube(app, canvas, pointsList)
 
 runApp(width=700, height=700)
