@@ -34,13 +34,18 @@ class ThreeDBoard:
         self.board = [[None for i in range(self.cols)] for j in range(self.rows)]
         self.widthMargin = self.width/10
         self.heightMargin = self.height/40
+        self.currRow = None
+        self.currCol = None
 
     def getCellBounds(self, row, col):
+        self.currRow = row
+        self.currCol = col
         x0 = self.widthMargin + self.margin + ((col+row/2) * self.widthMargin)
         y0 = self.margin * (self.marginMultiplier - 1) - row*self.heightMargin
         x1, y1 = x0 + self.widthMargin/2, y0 - self.heightMargin
         x2, y2 = x1 + self.widthMargin, y1
         x3, y3 = x2 - self.widthMargin/2, y0
+
         return (x0, y0, x1, y1, x2, y2, x3, y3)
 
 class CreateCube:
@@ -182,7 +187,8 @@ def mousePressed(app, event):
         print(app.selection)
 
 def reached(app):
-    return
+    for board in app.boards:
+        return
 
 def timerFired(app):
     if not reached(app):
