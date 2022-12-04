@@ -26,9 +26,9 @@ import copy
 import random
 
 class ThreeDBoard:
-    def __init__(self, width, height, marginMultiplier):
-        self.rows = 4
-        self.cols = 4
+    def __init__(self, width, height, rows, cols, marginMultiplier):
+        self.rows = rows
+        self.cols = cols
         self.margin = 60
         self.width = width
         self.height = height
@@ -63,15 +63,13 @@ class CreateCube:
             if idx % 2 == 1:
                 topFacePoints[idx] -= self.height
         self.points.append(topFacePoints)
+        print(self.points)
         return self.points
 
 class WinDetection:
-    def __init__(self, boards):
+    def __init__(self, boards, numGrids):
         self.boards = boards
-
-    def removeFirstBoard(self):
-        if len(self.boards) > 0:
-            self.boards.pop(0)
+        self.numGrids = numGrids
 
     def detectHorizontalOnGrid(self):
         for board in self.boards:
@@ -86,32 +84,78 @@ class WinDetection:
         for boardIndex in range(len(self.boards)):
             points.append(self.boards[boardIndex].board[boardIndex][counter])
             counter += 1
-        print(points)
         if points[0] != None and len(set(points)) == 1:
             return True
         else:
             return False
 
+    def getColumns(self):
+        allCols = []
+        for board in self.boards:
+            columns = list(zip(*board.board))
+            allCols.append(columns)
+        return allCols
+
     def detectVerticalOnGrid(self):
-        return
+        allCols = self.getColumns()
+        for grid in allCols:
+            for col in grid:
+                if col[0] != None and len(set(col)) == 1:
+                    return True
+        return False
 
     def detectVerticalAcrossGrids(self):
-        return
+        """row = None
+        temp = []
+        allCols = self.getColumns()
+        for row in allCols[-1]:
+            for i in row:
+                if row[i] != None:
+                    row = i
+                else:
+                    break
+        for col in row:
+                print(col)
+                if allCols[0][row][col] != None:
+                    tempSet.add([allCols[0][row][col]])
+                    r, c = row, col
+        for grid in range(len(allCols)):
+            tempSet.add()
+        if len(tempSet) == 1:
+            return True
+        else:
+            return False"""
 
     def detectPositiveDiagonalonGrid(self):
-        return
+        temp = []
+        for board in self.boards:
+            for i, row in enumerate(board.board):
+                temp.append(row[i])
+            if temp[0] != None and len(set(temp)) == 1: return True
+        return False
 
     def detectPositiveDiagonalAcrossGrids(self):
         return
 
     def detectNegativeDiagonalonGrid(self):
-        return
+        temp = []
+        for board in self.boards:
+            for i, row in enumerate(board.board[::-1]):
+                temp.append(row[i])
+            if temp[0] != None and len(set(temp)) == 1: return True
+        return False
 
     def detectNegativeDiagonalAcrossGrids(self):
-        return
+        diagonalPoints = []
+        board = self.boards[0]
+        if board.board[board.cols-1][0] == None:
+            return False
+        for board in self.boards:
+            for i in range(board.rows):
+                diagonalPoints.append(board)
+
 
     def checkWin(self):
-        self.removeFirstBoard()
         if (self.detectHorizontalOnGrid() or 
             self.detectHorizontalAcrossGrids() or 
             self.detectVerticalOnGrid() or 
@@ -125,7 +169,7 @@ class WinDetection:
 
 def appStarted(app):
     app.selection = (-1, -1)
-    app.numGrids = 4
+    app.numGrids = None
     app.boards = []
     app.marginMultiplier = 3.6
     app.players = ["red", "gold"]
@@ -137,27 +181,19 @@ def appStarted(app):
     app.margin = 50
 
 def switchPlayers(app):
-    if len(app.boards) > 0:
-            win = WinDetection(app.boards)
-            print(win.checkWin())
-
     if app.players.index(app.currPlayer) == 0:
         app.currPlayer = app.players[1]
     else:
         app.currPlayer = app.players[0]
 
-def generateBoards(app):
-    firstBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier)
-    secondBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier + 2)
-    thirdBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier + 4)
-    fourthBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier + 6)
-    fifthBoard = ThreeDBoard(app.width, app.height, app.marginMultiplier + 8)
-    app.boards.append(firstBoard)
-    app.boards.append(secondBoard)
-    app.boards.append(thirdBoard)
-    app.boards.append(fourthBoard)
-    app.boards.append(fifthBoard)
-    return firstBoard
+def generateBoards(app, num):
+    for i in range(num + 1):
+        if num <= 3:
+            app.boards.append(ThreeDBoard(app.width+150, app.height, num, num, app.marginMultiplier + (2 * i)))
+        elif num == 4:
+            app.boards.append(ThreeDBoard(app.width, app.height, num, num, app.marginMultiplier + (2 * i)))
+        elif num == 5:
+            app.boards.append(ThreeDBoard(app.width-100, app.height, num, num, app.marginMultiplier + (1.5 * i)))
 
 def pointInGrid(app, x, y):
     pointsList = []
@@ -193,17 +229,24 @@ def checkForOrange(app):
                 app.bottomFacePoints.append([x0, y0, x1, y1, x2, y2, x3, y3])
                 return
 
-def keyPressed(app, event):
-    # if starter screen button pressed
-    if event.key == 'd':
-        generateBoards(app)
-
 def mousePressed(app, event):
     x, y = event.x, event.y
+    num = 1
     if app.page == 0:
-        if pointToHumanVsHumanMode(app, x, y):
+        if pointToLevelOne(app, x, y):
             app.page = 1
-    elif app.page == 1:
+            app.numGrids = 3
+            generateBoards(app, app.numGrids)
+        elif pointToLevelTwo(app, x, y):
+            app.page = 2
+            app.numGrids = 4
+            generateBoards(app, app.numGrids)
+            print(app.boards)
+        elif pointToLevelThree(app, x, y):
+            app.page = 3
+            app.numGrids = 5
+            generateBoards(app, app.numGrids)
+    elif app.page in {1, 2, 3}:
         app.bottomFacePoints.clear()
         if pointInGrid(app, event.x, event.y) == None:
             app.selection = (-1, -1)
@@ -227,8 +270,8 @@ def reached(app):
         if app.boards[boardNum].board[row][col] == None:
             boardToBeReached = boardNum
 
-
     pointsToReach = app.boards[boardToBeReached].getCellBounds(row, col)
+    if app.page in {2, 3}: app.marginError = 20
     for idx in range(len(pointsToReach)):
         if idx % 2 == 1 and (app.bottomFacePoints[0][idx] - app.marginError <= 
         pointsToReach[idx] <= app.bottomFacePoints[0][idx] + app.marginError):
@@ -251,10 +294,17 @@ def timerFired(app):
                     points[idx] += app.dy
         return
 
-def pointToHumanVsHumanMode(app, x, y):
-    return (app.width//2 - 140 <= x <= app.width//2 - 40 and
-            app.height // 2 + app.margin <= y <= app.height//2 + 
-            (2 * app.margin))
+def pointToLevelOne(app, x, y):
+    return (app.width//2-80 <= x <= app.width//2+80 and
+            app.height//2 - (2 * app.margin) <= y <= app.height // 2 - app.margin)
+
+def pointToLevelTwo(app, x, y):
+    return (app.width//2-80 <= x <= app.width//2+80 and
+            app.height // 2 <= y <= app.height//2 + (1 * app.margin))
+
+def pointToLevelThree(app, x, y):
+    return (app.width//2-80 <= x <= app.width//2+80 and
+            app.height // 2 + (2 *  app.margin) <= y <= app.height//2 + (3 * app.margin))
 
 def pointToExit(app, x, y):
     return (app.width // 2 - app.margin <= x <= app.width // 2 + app.margin and 
@@ -308,11 +358,8 @@ def drawHomeScreen(app, canvas):
                             fill="white")
     canvas.create_text(app.width//2, (app.height // 2 + 2.5 * app.margin), 
                         text="Hard", fill="black", font="Arial 25 bold")
-    canvas.create_rectangle(app.width//2-80, app.height // 2 + (4 * app.margin) , 
-                            app.width//2+80, app.height//2 + (5 * app.margin),
-                            fill="white")
-    canvas.create_text(app.width//2, (app.height // 2 + 4.5 * app.margin), 
-                        text="Custom", fill="black", font="Arial 25 bold")
+    canvas.create_rectangle(20, 20, 100, 40, fill="white")
+    canvas.create_text(60, 30, text="Help", fill="black", font="Arial 15 bold")
 
 def drawExit(app, canvas):
     canvas.create_rectangle(app.width // 2 - app.margin, app.height - 20,
@@ -321,6 +368,9 @@ def drawExit(app, canvas):
     canvas.create_text(app.width//2, app.height-10, text="Exit")
 
 def drawHumanHumanGame(app, canvas):
+    canvas.create_rectangle(20, 20, 100, 40, fill="black")
+    canvas.create_text(60, 30, text="Help", fill="white", font="Arial 15 bold")
+
     for board in app.boards:
         for row in range(board.rows):
             for col in range(board.cols):
@@ -346,15 +396,27 @@ def drawHumanHumanGame(app, canvas):
     except Exception:
         pass
 
+    if len(app.boards) > 1:
+        win = WinDetection(app.boards[1:], app.numGrids)
+        if win.checkWin():
+            drawGameOver(app, canvas)
+
+def drawGameOver(app, canvas):
+    canvas.create_rectangle(app.width//2 - 100, (app.height / 2) - 50,
+                            app.width//2 + 100, (app.height / 2) + 50, fill="light blue")
+    player = "red" if app.currPlayer == "gold" else "gold"
+    canvas.create_text(app.width//2, app.height/2, text="{} wins!".format(player), fill="black", 
+                      font="Arial 22 bold")
+
 def drawHelpScreen(app, canvas):
     return
 
 def redrawAll(app, canvas):
     if app.page == 0:
         drawHomeScreen(app, canvas)
-    elif app.page == 1:
+        drawHelpScreen(app, canvas)
+    elif app.page in {1, 2, 3}:
         drawHumanHumanGame(app, canvas)
-    elif app.page == 2:
         drawHelpScreen(app, canvas)
 
 runApp(width=700, height=700)
