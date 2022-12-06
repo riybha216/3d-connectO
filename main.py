@@ -1,9 +1,7 @@
-"""
-tp3 features:
-- if have time: blue cube is like wild card
-- if have time: add rotation
-- if have time: fix minimax
-"""
+'''
+Primary Functions and param descriptions:
+About the Game (ConnectO): 
+'''
 
 from cmu_112_graphics import *
 import copy
@@ -23,16 +21,15 @@ class ThreeDBoard:
         self.currRow = None
         self.currCol = None
 
-    # gets the four cell points for each cell in the grid
     def getCellBounds(self, row, col):
         self.currRow = row
         self.currCol = col
+
         x0 = self.widthMargin + self.margin + ((col+row/2) * self.widthMargin)
         y0 = self.margin * (self.marginMultiplier - 1) - row*self.heightMargin
         x1, y1 = x0 + self.widthMargin/2, y0 - self.heightMargin
         x2, y2 = x1 + self.widthMargin, y1
         x3, y3 = x2 - self.widthMargin/2, y0
-
         return (x0, y0, x1, y1, x2, y2, x3, y3)
 
 class CreateCube:
@@ -58,6 +55,9 @@ class WinDetection:
         self.numGrids = numGrids
 
     def detectHorizontalOnGrid(self):
+        '''
+        works
+        '''
         for board in self.boards:
             for row in board.board:
                 if row[0] != None and len(set(row)) == 1:
@@ -65,16 +65,49 @@ class WinDetection:
         return False
 
     def detectHorizontalAcrossGrids(self):
-        points = []
-        counter = 0
-        for boardIndex in range(len(self.boards)):
-            points.append(self.boards[boardIndex].board[boardIndex][counter])
-            counter += 1
-        if points[0] != None and len(set(points)) == 1:
-            return True
-        else:
-            return False
+        locationsBottom, pointsBottom = [], []
+        locationsTop, pointsTop = [], []
+        allCols = self.getColumns()
+        
+        for i in range(self.numGrids - 1):
+            if allCols[self.numGrids - 1][0][i] != None:
+                locationsBottom.append((0, i))
 
+        for i in range(self.numGrids - 1):
+            if allCols[0][0][i] != None:
+                locationsTop.append((0, i))
+
+        numGrids = self.numGrids - 1
+        if len(locationsBottom) > 0:
+            for loc in locationsBottom:
+                for i in range(numGrids):
+                    if allCols[numGrids][loc[0]][loc[1]] != allCols[numGrids - (i + 1)][loc[1] + i + 1][loc[0]]:
+                        break
+                    else:
+                        pointsBottom.append(allCols[numGrids][loc[0]][loc[1]])
+                        pointsBottom.append(allCols[numGrids - (i + 1)][loc[1] + i + 1][loc[0]])
+
+                if (None not in pointsBottom and len(pointsBottom) > self.numGrids and 
+                len(set(pointsBottom)) == 1):
+                    return True
+                else:
+                    break
+                
+        if len(locationsTop) > 0:
+            for loc in locationsTop:
+                for i in range(numGrids):
+                    if allCols[0][loc[0]][loc[1]] != allCols[0 + (i + 1)][loc[1] + i + 1][loc[0]]:
+                        break
+                    else:
+                        pointsTop.append(allCols[0][loc[0]][loc[1]])
+                        pointsTop.append(allCols[0 + (i + 1)][loc[1] + i + 1][loc[0]])
+
+                if (None not in pointsTop and len(pointsTop) > self.numGrids and 
+                len(set(pointsTop)) == 1):
+                    return True
+                else:
+                    return False
+            
     def getColumns(self):
         allCols = []
         for board in self.boards:
@@ -98,7 +131,6 @@ class WinDetection:
         # idea to flatten list using list comprehension from
         # Practice Midterm 2 Review Session on Panopoto, 112 Course Staff
         newL = [e for sList in lis for e in sList]
-        print(newL)
         anotherL = list()
         for e in newL:
             if e != None:
@@ -123,8 +155,6 @@ class WinDetection:
         return False
 
     def detectPositiveDiagonalAcrossGrids(self):
-        for board in self.boards:
-            print(board.board)
         if self.boards[2].board[0][0] == None:
             return False
         else:
@@ -228,12 +258,11 @@ def getClickedPoints(app):
 # checks which point on the topmost grid has been clicked
 def checkForOrange(app):
     firstBoard = app.boards[0]
-    for row in range(firstBoard.rows):
-        for col in range(firstBoard.cols):
-            if firstBoard.board[row][col] == "orange":
-                (x0, y0, x1, y1, x2, y2, x3, y3) = firstBoard.getCellBounds(row, col)
-                app.bottomFacePoints.append([x0, y0, x1, y1, x2, y2, x3, y3])
-                return
+    row, col = app.selection[0], app.selection[1]
+    if firstBoard.board[row][col] == "orange":
+        (x0, y0, x1, y1, x2, y2, x3, y3) = firstBoard.getCellBounds(row, col)
+        app.bottomFacePoints.append([x0, y0, x1, y1, x2, y2, x3, y3])
+        return
 
 def mousePressed(app, event):
     x, y = event.x, event.y
@@ -254,6 +283,7 @@ def mousePressed(app, event):
             app.numGrids = 5
             generateBoards(app, app.numGrids)
     elif app.page in {1, 2, 3}:
+        currSelection = app.selection
         if pointToExit(app, x, y):
             app.page = 0
         app.bottomFacePoints.clear()
@@ -261,8 +291,12 @@ def mousePressed(app, event):
             app.selection = (-1, -1)
         else:
             (row, col) = pointInGrid(app, event.x, event.y)
-            app.selection = (row, col)
-            checkForOrange(app)
+            if (row, col) == currSelection:
+                app.selection = (-1, -1)
+            else:
+                print(row, col)
+                app.selection = (row, col)
+                checkForOrange(app)
     elif app.page == 4:
         if pointToExit(app, x, y):
             app.page = 0
@@ -282,29 +316,37 @@ def reached(app):
         if app.boards[boardNum].board[row][col] == None:
             boardToBeReached = boardNum
 
-    pointsToReach = app.boards[boardToBeReached].getCellBounds(row, col)
-    if app.page in {2, 3}: app.marginError = 20
-    for idx in range(len(pointsToReach)):
-        if idx % 2 == 1 and (app.bottomFacePoints[0][idx] - app.marginError <= 
-        pointsToReach[idx] <= app.bottomFacePoints[0][idx] + app.marginError):
-            app.boards[0].board[row][col] = None
-            app.boards[boardToBeReached].board[row][col] = app.currPlayer
-            app.bottomFacePoints.clear()
-            switchPlayers(app)
-            return True
-    return False
+    print(boardToBeReached)
+    if boardToBeReached != None:
+        pointsToReach = app.boards[boardToBeReached].getCellBounds(row, col)
+        if app.page in {2, 3}: app.marginError = 20
+        for idx in range(len(pointsToReach)):
+            if idx % 2 == 1 and (app.bottomFacePoints[0][idx] - app.marginError <= 
+            pointsToReach[idx] <= app.bottomFacePoints[0][idx] + app.marginError):
+                app.boards[0].board[row][col] = None
+                app.boards[boardToBeReached].board[row][col] = app.currPlayer
+                app.bottomFacePoints.clear()
+                switchPlayers(app)
+                return True
+        return False
+    else:
+        app.selection = (-1, -1)
+        return "No"
 
 def timerFired(app):
     if len(app.bottomFacePoints) == 0:
         return
     else:
         hasReached = reached(app)
-        if not hasReached:
-            points = app.bottomFacePoints[0]
-            for idx in range(len(points)):
-                if idx % 2 == 1:
-                    points[idx] += app.dy
-        return
+        if isinstance(hasReached, bool):
+            if not hasReached:
+                points = app.bottomFacePoints[0]
+                for idx in range(len(points)):
+                    if idx % 2 == 1:
+                        points[idx] += app.dy
+            return
+        elif isinstance(hasReached, str):
+            return
 
 # finds if the click has coordinates that are within the bounds of the buttons
 def pointToLevelOne(app, x, y):
@@ -384,6 +426,9 @@ def drawExit(app, canvas):
                             app.width // 2 + app.margin, app.height, fill="green")
 
     canvas.create_text(app.width//2, app.height-10, text="Exit")
+
+def drawMap(app, canvas):
+    return
 
 def drawHumanHumanGame(app, canvas):
     drawExit(app, canvas)
