@@ -65,10 +65,13 @@ class WinDetection:
         return False
 
     def detectHorizontalAcrossGrids(self):
+        '''
+        works
+        '''
         locationsBottom, pointsBottom = [], []
         locationsTop, pointsTop = [], []
         allCols = self.getColumns()
-        
+
         for i in range(self.numGrids - 1):
             if allCols[self.numGrids - 1][0][i] != None:
                 locationsBottom.append((0, i))
@@ -116,6 +119,9 @@ class WinDetection:
         return allCols
 
     def detectVerticalOnGrid(self):
+        '''
+        works
+        '''
         allCols = self.getColumns()
         for grid in allCols:
             for col in grid:
@@ -124,28 +130,33 @@ class WinDetection:
         return False
 
     def detectVerticalAcrossGrids(self):
-        lis = []
-        for board in self.boards:
-            for row in board.board:
-                lis.append(row)
-        # idea to flatten list using list comprehension from
-        # Practice Midterm 2 Review Session on Panopoto, 112 Course Staff
-        newL = [e for sList in lis for e in sList]
-        anotherL = list()
-        for e in newL:
-            if e != None:
-                anotherL.append(newL.index(e))
-                newL[newL.index(e)] = None
-        
-        if len(anotherL) > 0:
-            for element in anotherL:
-                if element + ((self.numGrids - 1) ** 2) not in anotherL:
-                    return False
-            return True
-        else:
-            return False
+        '''
+        problem, checks 1st and 3rd and calls it a day
+        '''
+        pointsToCompare = []
+        candidates = []
+        currBoard = self.boards[0]
+        for row in range(currBoard.rows):
+            for col in range(currBoard.cols):
+                if currBoard.board[row][col] != None:
+                    pointsToCompare.append((row, col))
+    
+        for point in pointsToCompare:
+            (row, col) = point
+            # its not iterating for some reason 
+            for idx in range(self.numGrids-1, 0, -1):
+                board = self.boards[idx]
+                if board.board[row][col] == currBoard.board[row][col]:
+                    candidates.append(board.board[row][col])
+
+            if len(candidates) > 2 and candidates[0] != None and len(set(candidates)) == 1:
+                return True
+        return False
 
     def detectPositiveDiagonalonGrid(self):
+        '''
+        works
+        '''
         temp = []
         for board in self.boards:
             for i, row in enumerate(board.board):
@@ -155,17 +166,24 @@ class WinDetection:
         return False
 
     def detectPositiveDiagonalAcrossGrids(self):
-        if self.boards[2].board[0][0] == None:
+        points = []
+        gridIndex = self.numGrids - 1
+        if self.boards[gridIndex].board[0][0] == None:
             return False
         else:
-            if len(self.boards) > 2:
-                if (self.boards[2].board[0][0] == self.boards[1].board[1][1] == 
-                    self.boards[0].board[2][2]):
-                    return True
-                else:
+            for num in range(self.numGrids):
+                if (self.boards[gridIndex].board[num][num] != self.boards[gridIndex - 1].board[num+1][num+1]):
                     return False
-
+                points.append(self.boards[gridIndex].board[num][num])
+            
+            if len(points) == 3 and points[0] != None and len(set(points)) == 1:
+                return True
+            return False
+                
     def detectNegativeDiagonalonGrid(self):
+        '''
+        works
+        '''
         temp = []
         for board in self.boards:
             for i, row in enumerate(board.board[::-1]):
@@ -195,6 +213,27 @@ class WinDetection:
             print("True")
             return True
         return False
+
+class CreateGridForMap:
+    def __init__(self, width, height, rows, cols, startX, startY):
+        self.width = width
+        self.height = height
+        self.rows = rows
+        self.cols = cols
+        self.margin = 5
+        self.startX = startX
+        self.startY = startY
+
+    def getCellBounds(self, row, col):
+        gridWidth  = self.width - 2*self.margin
+        gridHeight = self.height - 2*self.margin
+        cellWidth = gridWidth / self.cols
+        cellHeight = gridHeight / self.rows
+        x0 = self.startX + col * cellWidth
+        x1 = self.startX + (col+1) * cellWidth
+        y0 = self.startY + row * cellHeight
+        y1 = self.startY + (row+1) * cellHeight
+        return (x0, y0, x1, y1)
 
 def appStarted(app):
     app.selection = (-1, -1)
@@ -316,7 +355,6 @@ def reached(app):
         if app.boards[boardNum].board[row][col] == None:
             boardToBeReached = boardNum
 
-    print(boardToBeReached)
     if boardToBeReached != None:
         pointsToReach = app.boards[boardToBeReached].getCellBounds(row, col)
         if app.page in {2, 3}: app.marginError = 20
@@ -428,10 +466,20 @@ def drawExit(app, canvas):
     canvas.create_text(app.width//2, app.height-10, text="Exit")
 
 def drawMap(app, canvas):
-    return
+    canvas.create_text(app.width - 55, 15, text="2D Map", font="Arial 14 bold", fill="black")
+    counter = 0
+    for board in app.boards[1:]:
+        map = CreateGridForMap(100, app.height//8, board.rows, board.cols, app.width - 100, 7 + (80 * counter))
+        for row in range(board.rows):
+            for col in range(board.cols):
+                (x0, y0, x1, y1) = map.getCellBounds(board.rows - row, col)
+                fill = "darkBlue" if board.board[row][col] == None else board.board[row][col]
+                canvas.create_rectangle(x0, y0, x1, y1, fill=fill)
+        counter += 1
 
 def drawHumanHumanGame(app, canvas):
     drawExit(app, canvas)
+    drawMap(app, canvas)
     currFill, otherFill = None, None
     canvas.create_rectangle(20, 20, 100, 40, fill="black")
     canvas.create_text(60, 30, text="Help", fill="white", font="Arial 15 bold")
