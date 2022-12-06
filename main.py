@@ -4,8 +4,9 @@ About the Game (ConnectO):
 '''
 
 from cmu_112_graphics import *
-import copy
 import random
+import math
+import copy
 
 class ThreeDBoard:
     def __init__(self, width, height, rows, cols, marginMultiplier):
@@ -99,11 +100,11 @@ class WinDetection:
         if len(locationsTop) > 0:
             for loc in locationsTop:
                 for i in range(numGrids):
-                    if allCols[0][loc[0]][loc[1]] != allCols[0 + (i + 1)][loc[1] + i + 1][loc[0]]:
+                    if allCols[0][loc[0]][loc[1]] != allCols[i + 1][loc[1] + i + 1][loc[0]]:
                         break
                     else:
                         pointsTop.append(allCols[0][loc[0]][loc[1]])
-                        pointsTop.append(allCols[0 + (i + 1)][loc[1] + i + 1][loc[0]])
+                        pointsTop.append(allCols[i + 1][loc[1] + i + 1][loc[0]])
 
                 if (None not in pointsTop and len(pointsTop) > self.numGrids and 
                 len(set(pointsTop)) == 1):
@@ -131,7 +132,7 @@ class WinDetection:
 
     def detectVerticalAcrossGrids(self):
         '''
-        problem, checks 1st and 3rd and calls it a day
+        works
         '''
         pointsToCompare = []
         candidates = []
@@ -143,14 +144,13 @@ class WinDetection:
     
         for point in pointsToCompare:
             (row, col) = point
-            # its not iterating for some reason 
-            for idx in range(self.numGrids-1, 0, -1):
-                board = self.boards[idx]
-                if board.board[row][col] == currBoard.board[row][col]:
-                    candidates.append(board.board[row][col])
+            for idx in range(self.numGrids-1, -1, -1):
+                if self.boards[idx].board[row][col] == currBoard.board[row][col]:
+                    candidates.append(self.boards[idx].board[row][col])
 
-            if len(candidates) > 2 and candidates[0] != None and len(set(candidates)) == 1:
-                return True
+        if len(candidates) > 0 and None not in candidates and (candidates.count("gold") == self.numGrids
+            or candidates.count("red") == self.numGrids):
+            return True
         return False
 
     def detectPositiveDiagonalonGrid(self):
@@ -166,20 +166,18 @@ class WinDetection:
         return False
 
     def detectPositiveDiagonalAcrossGrids(self):
+        '''
+        works
+        '''
         points = []
-        gridIndex = self.numGrids - 1
-        if self.boards[gridIndex].board[0][0] == None:
-            return False
+        for i in range(self.numGrids):
+            points.append(self.boards[self.numGrids - (1 + i)].board[i][i])
+
+        if None not in points and len(set(points)) == 1:
+            return True
         else:
-            for num in range(self.numGrids):
-                if (self.boards[gridIndex].board[num][num] != self.boards[gridIndex - 1].board[num+1][num+1]):
-                    return False
-                points.append(self.boards[gridIndex].board[num][num])
-            
-            if len(points) == 3 and points[0] != None and len(set(points)) == 1:
-                return True
             return False
-                
+     
     def detectNegativeDiagonalonGrid(self):
         '''
         works
@@ -193,13 +191,17 @@ class WinDetection:
         return False
 
     def detectNegativeDiagonalAcrossGrids(self):
-        diagonalPoints = []
-        board = self.boards[self.numGrids - 1]
-        if board.board[board.cols-1][0] == None:
+        '''
+        works
+        '''
+        points = []
+        for i in range(self.numGrids):
+            points.append(self.boards[self.numGrids - (1 + i)].board[i][(self.numGrids - 1) - i])
+
+        if None not in points and len(set(points)) == 1:
+            return True
+        else:
             return False
-        for board in self.boards:
-            for i in range(board.rows):
-                diagonalPoints.append(board)
 
     def checkWin(self):
         if (self.detectHorizontalOnGrid() or 
@@ -210,7 +212,6 @@ class WinDetection:
             self.detectPositiveDiagonalAcrossGrids() or 
             self.detectNegativeDiagonalonGrid() or
             self.detectNegativeDiagonalAcrossGrids()):
-            print("True")
             return True
         return False
 
@@ -234,6 +235,14 @@ class CreateGridForMap:
         y0 = self.startY + row * cellHeight
         y1 = self.startY + (row+1) * cellHeight
         return (x0, y0, x1, y1)
+
+class Minimax:
+    def __init__(self):
+        alpha = -math.inf
+        beta = math.inf
+
+    def initialize(self):
+        return
 
 def appStarted(app):
     app.selection = (-1, -1)
@@ -322,12 +331,15 @@ def mousePressed(app, event):
             app.numGrids = 5
             generateBoards(app, app.numGrids)
     elif app.page in {1, 2, 3}:
+        win = WinDetection(app.boards[1:], app.numGrids)
         currSelection = app.selection
         if pointToExit(app, x, y):
             app.page = 0
         app.bottomFacePoints.clear()
         if pointInGrid(app, event.x, event.y) == None:
             app.selection = (-1, -1)
+        elif win.checkWin():
+            return
         else:
             (row, col) = pointInGrid(app, event.x, event.y)
             if (row, col) == currSelection:
@@ -530,7 +542,7 @@ def drawGameOver(app, canvas):
     canvas.create_rectangle(app.width//2 - 100, (app.height / 2) - 50,
                             app.width//2 + 100, (app.height / 2) + 50, fill="light blue")
     player = "red" if app.currPlayer == "gold" else "gold"
-    canvas.create_text(app.width//2, app.height/2, text="{} wins!".format(player), fill="black", 
+    canvas.create_text(app.width//2, app.height/2, text="{} wins!".format(player.capitalize()), fill="black", 
                       font="Arial 22 bold")
 
 def drawExit(app, canvas):
