@@ -111,10 +111,6 @@ def findIfWon(app, move, row, col, originalPiece, count):
 def quitGame(app, canvas):
     gameOver(app, canvas)
 
-# algorithm idea and theory inspired from
-# https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-
-# set-4-alpha-beta-pruning/
-
 def sortThroughWinningMoves(app, playerColor):
     for col in range(app.cols - 3):
         for row in range(app.rows):
@@ -169,9 +165,6 @@ def findOpenLoc(app):
                 validSpots.append(c)
     return validSpots
 
-# the idea of implementing scores for the minimax algorithm was taken from
-# https://www.mygreatlearning.com/blog/alpha-beta-pruning-in-ai/
-
 def getLists(app):
     currScore = 0
 
@@ -224,12 +217,6 @@ def getScores(subset):
 # https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-1-introduc
 # tion/#:~:text=Minimax%20is%20a%20kind%20of,%2C%20Mancala%2C%20Chess%2C%20etc.
 
-# I also found the concepts in the following tic-tac-toe minimax algorithm tutorial useful:
-# https://www.freecodecamp.org/news/minimax-algorithm-guide-how-to-create-an-unbeatable-ai/
-# The above also influenced the idea of adding scores to allow certain moves to be more
-# preferable to others; however, since the connect4 algorithm is much different, I did not base
-# my code on the above website.
-
 def minimax(app, board, depth, optimization, alpha, beta):
     locs = findOpenLoc(app)
     if isTerminal(app):
@@ -251,7 +238,7 @@ def minimax(app, board, depth, optimization, alpha, beta):
                     tempBoard = copy.copy(board)
                     tempBoard[r][c] = "yellow"
                     updtdScore = minimax(app, tempBoard, depth-1, False, 
-                                        alpha, beta)[1]
+                                        alpha, beta)[-1]
                     if updtdScore > best:
                         best = updtdScore
                         col = c
@@ -270,7 +257,7 @@ def minimax(app, board, depth, optimization, alpha, beta):
                     tempBoard = copy.copy(board)
                     tempBoard[r][c] = "yellow"
                     updtdScore = minimax(app, tempBoard, depth-1, True, 
-                                        alpha, beta)[1]
+                                        alpha, beta)[-1]
                     if updtdScore < best:
                         best = updtdScore
                         col = c
