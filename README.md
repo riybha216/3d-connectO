@@ -3,6 +3,8 @@
 Name: Riya Bhatia
 Section: C
 
+# About the Project
+
 Features to be Implemented:
 - 3D board with clickable and responsive cells
 - Both height and grid rows & cols are adjustable
