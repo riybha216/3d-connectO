@@ -1,6 +1,7 @@
 from cmu_112_graphics import *
 import copy
 
+
 class ThreeDBoard:
     def __init__(self, width, height, rows, cols, marginMultiplier):
         '''
@@ -47,6 +48,7 @@ class ThreeDBoard:
         x3, y3 = x2 - self.widthMargin/2, y0
         return (x0, y0, x1, y1, x2, y2, x3, y3)
 
+
 class CreateCube:
     def __init__(self, bottomFaceVertices):
         '''
@@ -76,6 +78,7 @@ class CreateCube:
                 topFaceVertices[idx] -= self.height
         self.points.append(topFaceVertices)
         return self.points
+
 
 class CreateGridForMap:
     def __init__(self, width, height, rows, cols, startX, startY):
