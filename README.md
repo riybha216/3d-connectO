@@ -1,9 +1,8 @@
 # 112-term-project
-Term project for 15-112
+3D ConnectO: Term Project for 15-112 F22
 
-Riya Bhatia
-
-Project: 3D Connect4
+Name: Riya Bhatia
+Section: C
 
 Features to be Implemented:
 - 3D board with clickable and responsive cells
