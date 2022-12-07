@@ -9,11 +9,12 @@ Section: C
 
 # How to Run
 
-Ensure that ```main.py```, ```createObjects.py```, and ```winDetection.py``` are in the same folder. Then, run ```main.py```.
+Ensure that ```main.py```, ```createObjects.py```, ```cmu_112_graphics.py```, and ```winDetection.py``` are in the same folder. Then, run ```main.py``` to run the main application. An application window should appear upon running.
 
-Features to be Implemented:
-- 3D board with clickable and responsive cells
-- Both height and grid rows & cols are adjustable
-- Clicking cells generates cubes, which are stackable
-- Win detection is implemented (win can occur with stackable cubes, and cubes on different levels of the 3d board)
-- Blue cube is wildcard that can be implemented by either player
+# Libraries
+
+External libraries outside of what we used in class were not utilized. Libraries needed include ```copy``` and ```random```.
+
+# Shortcut Comamnds
+
+No shortcut commands exist. To begin, choose a level to play. Then, to place a piece, click any grid square on topmost grid. To pop out a piece, click the piece that you wish to pop out.
