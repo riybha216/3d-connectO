@@ -1,7 +1,6 @@
 # 3D ConnectO: Term Project for 15-112 F22
 
-Name: Riya Bhatia
-Section: C
+Riya Bhatia, Section C
 
 # About the Project
 
