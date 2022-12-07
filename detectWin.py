@@ -1,5 +1,6 @@
 from cmu_112_graphics import *
 
+
 class WinDetection:
     def __init__(self, boards, numGrids):
         '''
@@ -26,16 +27,22 @@ class WinDetection:
 
     def detectPositiveHorizontalAcrossGrids(self):
         '''
-        Returns boolean value based on whether 
+        Returns boolean value based on whether a positively-sloping
+        horizontal exists across boards.
         '''
         locationsBottom, pointsBottom = [], []
+        numGrids = self.numGrids - 1
         allCols = self.getColumns()
 
+        # check a positively-sloping horizontal win if a token
+        # is stored at the leftmost column of the bottom grid for efficiency
+        # purposes
         for i in range(self.numGrids - 1):
             if allCols[self.numGrids - 1][0][i] != None:
                 locationsBottom.append((0, i))
-
-        numGrids = self.numGrids - 1
+        
+        # checks if horizontal exists for the specified points in
+        # locationsBottom
         if len(locationsBottom) > 0:
             for loc in locationsBottom:
                 for i in range(numGrids):
@@ -46,6 +53,7 @@ class WinDetection:
                         pointsBottom.append(allCols[numGrids][loc[0]][loc[1]])
                         pointsBottom.append(allCols[numGrids - (i + 1)]
                                                    [loc[1] + i + 1][loc[0]])
+
                 if (None not in pointsBottom and 
                     len(pointsBottom) > self.numGrids and 
                     len(set(pointsBottom)) == 1):
@@ -54,14 +62,23 @@ class WinDetection:
                     break
 
     def detectNegativeHorizontalAcrossGrids(self):
+        '''
+        Returns boolean value based on whether a negatively-sloping
+        horizontal exists across boards.
+        '''
         locationsTop, pointsTop = [], []
         numGrids = self.numGrids - 1
         allCols = self.getColumns()
 
+        # check a negatively-sloping horizontal win if a token
+        # is stored at the leftmost column of the topmost grid for efficiency
+        # purposes
         for i in range(self.numGrids - 1):
             if allCols[0][0][i] != None:
                 locationsTop.append((0, i))
 
+        # checks if horizontal exists for the specified points in
+        # locationsTop
         if len(locationsTop) > 0:
             for loc in locationsTop:
                 for i in range(numGrids):
@@ -80,6 +97,9 @@ class WinDetection:
                     return False
             
     def getColumns(self):
+        '''
+        Returns all columns of each board in a 3D list.
+        '''
         allCols = []
         for board in self.boards:
             columns = list(zip(*board.board))
@@ -88,7 +108,8 @@ class WinDetection:
 
     def detectVerticalOnGrid(self):
         '''
-        works
+        Returns boolean value based on whether a vertical
+        connectO exists on either board.
         '''
         allCols = self.getColumns()
         for grid in allCols:
@@ -99,30 +120,39 @@ class WinDetection:
 
     def detectVerticalAcrossGrids(self):
         '''
-        works
+        Returns boolean value based on whether a vertical
+        connectO exists across boards.
         '''
         pointsToCompare = []
         candidates = []
         currBoard = self.boards[0]
+
+        # for efficiency purposes, checks vertical across grids only if
+        # topmost board has a piece on it
         for row in range(currBoard.rows):
             for col in range(currBoard.cols):
                 if currBoard.board[row][col] != None:
                     pointsToCompare.append((row, col))
-    
+
+        # finds all lists with vertical connectO's across boards
         for point in pointsToCompare:
             (row, col) = point
             for idx in range(self.numGrids-1, -1, -1):
                 if self.boards[idx].board[row][col] == currBoard.board[row][col]:
                     candidates.append(self.boards[idx].board[row][col])
 
-        if len(candidates) > 0 and None not in candidates and (candidates.count("gold") == self.numGrids
-            or candidates.count("red") == self.numGrids):
+        # ensures that lists meet the requirements of a vertical across grids
+        # win
+        if (len(candidates) > 0 and None not in candidates and 
+            (candidates.count("gold") == self.numGrids
+            or candidates.count("red") == self.numGrids)):
             return True
         return False
 
     def detectPositiveDiagonalonGrid(self):
         '''
-        works
+        Returns boolean value based on whether a positively-sloping
+        diagonal connectO exists on either board.
         '''
         temp = []
         for board in self.boards:
@@ -134,7 +164,11 @@ class WinDetection:
 
     def detectPositiveDiagonalAcrossGrids(self):
         '''
-        works
+        Returns boolean value based on whether a positively-sloping
+        diagonal connectO exists across boards.
+
+        Since there is only one possible way to do this, we only check
+        that combination.
         '''
         points = []
         for i in range(self.numGrids):
@@ -147,7 +181,8 @@ class WinDetection:
      
     def detectNegativeDiagonalonGrid(self):
         '''
-        works
+        Returns boolean value based on whether a negatively-sloping
+        diagonal connectO exists on either board.
         '''
         temp = []
         for board in self.boards:
@@ -159,11 +194,16 @@ class WinDetection:
 
     def detectNegativeDiagonalAcrossGrids(self):
         '''
-        works
+        Returns boolean value based on whether a negatively-sloping
+        diagonal connectO exists across boards.
+
+        Since there is only one possible way to do this, we only check
+        that combination.
         '''
         points = []
         for i in range(self.numGrids):
-            points.append(self.boards[self.numGrids - (1 + i)].board[i][(self.numGrids - 1) - i])
+            points.append(self.boards[self.numGrids - (1 + i)].
+                          board[i][(self.numGrids - 1) - i])
 
         if None not in points and len(set(points)) == 1:
             return True
@@ -171,6 +211,10 @@ class WinDetection:
             return False
 
     def checkWin(self):
+        '''
+        Returns boolean value based on whether a win on either board or
+        across boards has occurred.
+        '''
         if (self.detectHorizontalOnGrid() or 
             self.detectPositiveHorizontalAcrossGrids() or 
             self.detectNegativeHorizontalAcrossGrids() or
