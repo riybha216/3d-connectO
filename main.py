@@ -4,245 +4,9 @@ About the Game (ConnectO):
 '''
 
 from cmu_112_graphics import *
+from createObjects import *
+from detectWin import *
 import random
-import math
-import copy
-
-class ThreeDBoard:
-    def __init__(self, width, height, rows, cols, marginMultiplier):
-        self.rows = rows
-        self.cols = cols
-        self.margin = 60
-        self.width = width
-        self.height = height
-        self.marginMultiplier = marginMultiplier
-        self.board = [[None for i in range(self.cols)] for j in range(self.rows)]
-        self.widthMargin = self.width/10
-        self.heightMargin = self.height/40
-        self.currRow = None
-        self.currCol = None
-
-    def getCellBounds(self, row, col):
-        self.currRow = row
-        self.currCol = col
-
-        x0 = self.widthMargin + self.margin + ((col+row/2) * self.widthMargin)
-        y0 = self.margin * (self.marginMultiplier - 1) - row*self.heightMargin
-        x1, y1 = x0 + self.widthMargin/2, y0 - self.heightMargin
-        x2, y2 = x1 + self.widthMargin, y1
-        x3, y3 = x2 - self.widthMargin/2, y0
-        return (x0, y0, x1, y1, x2, y2, x3, y3)
-
-class CreateCube:
-    def __init__(self, bottomFaceVertices):
-        self.bottomFaceVertices = bottomFaceVertices
-        self.points = []
-        self.height = 30
-
-    # calculates all vertices of the cube
-    def getAllPoints(self):
-        topFacePoints = copy.copy(self.bottomFaceVertices)
-        self.points.append(self.bottomFaceVertices)
-        for idx in range(len(topFacePoints)):
-            if idx % 2 == 1:
-                topFacePoints[idx] -= self.height
-        self.points.append(topFacePoints)
-        return self.points
-
-# checks all possible ways to win (across levels and on the grid itself)
-class WinDetection:
-    def __init__(self, boards, numGrids):
-        self.boards = boards
-        self.numGrids = numGrids
-
-    def detectHorizontalOnGrid(self):
-        '''
-        works
-        '''
-        for board in self.boards:
-            for row in board.board:
-                if row[0] != None and len(set(row)) == 1:
-                    return True
-        return False
-
-    def detectHorizontalAcrossGrids(self):
-        '''
-        works
-        '''
-        locationsBottom, pointsBottom = [], []
-        locationsTop, pointsTop = [], []
-        allCols = self.getColumns()
-
-        for i in range(self.numGrids - 1):
-            if allCols[self.numGrids - 1][0][i] != None:
-                locationsBottom.append((0, i))
-
-        for i in range(self.numGrids - 1):
-            if allCols[0][0][i] != None:
-                locationsTop.append((0, i))
-
-        numGrids = self.numGrids - 1
-        if len(locationsBottom) > 0:
-            for loc in locationsBottom:
-                for i in range(numGrids):
-                    if allCols[numGrids][loc[0]][loc[1]] != allCols[numGrids - (i + 1)][loc[1] + i + 1][loc[0]]:
-                        break
-                    else:
-                        pointsBottom.append(allCols[numGrids][loc[0]][loc[1]])
-                        pointsBottom.append(allCols[numGrids - (i + 1)][loc[1] + i + 1][loc[0]])
-
-                if (None not in pointsBottom and len(pointsBottom) > self.numGrids and 
-                len(set(pointsBottom)) == 1):
-                    return True
-                else:
-                    break
-                
-        if len(locationsTop) > 0:
-            for loc in locationsTop:
-                for i in range(numGrids):
-                    if allCols[0][loc[0]][loc[1]] != allCols[i + 1][loc[1] + i + 1][loc[0]]:
-                        break
-                    else:
-                        pointsTop.append(allCols[0][loc[0]][loc[1]])
-                        pointsTop.append(allCols[i + 1][loc[1] + i + 1][loc[0]])
-
-                if (None not in pointsTop and len(pointsTop) > self.numGrids and 
-                len(set(pointsTop)) == 1):
-                    return True
-                else:
-                    return False
-            
-    def getColumns(self):
-        allCols = []
-        for board in self.boards:
-            columns = list(zip(*board.board))
-            allCols.append(columns)
-        return allCols
-
-    def detectVerticalOnGrid(self):
-        '''
-        works
-        '''
-        allCols = self.getColumns()
-        for grid in allCols:
-            for col in grid:
-                if col[0] != None and len(set(col)) == 1:
-                    return True
-        return False
-
-    def detectVerticalAcrossGrids(self):
-        '''
-        works
-        '''
-        pointsToCompare = []
-        candidates = []
-        currBoard = self.boards[0]
-        for row in range(currBoard.rows):
-            for col in range(currBoard.cols):
-                if currBoard.board[row][col] != None:
-                    pointsToCompare.append((row, col))
-    
-        for point in pointsToCompare:
-            (row, col) = point
-            for idx in range(self.numGrids-1, -1, -1):
-                if self.boards[idx].board[row][col] == currBoard.board[row][col]:
-                    candidates.append(self.boards[idx].board[row][col])
-
-        if len(candidates) > 0 and None not in candidates and (candidates.count("gold") == self.numGrids
-            or candidates.count("red") == self.numGrids):
-            return True
-        return False
-
-    def detectPositiveDiagonalonGrid(self):
-        '''
-        works
-        '''
-        temp = []
-        for board in self.boards:
-            for i, row in enumerate(board.board):
-                temp.append(row[i])
-            if temp[0] != None and len(set(temp)) == 1: return True
-            temp.clear()
-        return False
-
-    def detectPositiveDiagonalAcrossGrids(self):
-        '''
-        works
-        '''
-        points = []
-        for i in range(self.numGrids):
-            points.append(self.boards[self.numGrids - (1 + i)].board[i][i])
-
-        if None not in points and len(set(points)) == 1:
-            return True
-        else:
-            return False
-     
-    def detectNegativeDiagonalonGrid(self):
-        '''
-        works
-        '''
-        temp = []
-        for board in self.boards:
-            for i, row in enumerate(board.board[::-1]):
-                temp.append(row[i])
-            if temp[0] != None and len(set(temp)) == 1: return True
-            temp.clear()
-        return False
-
-    def detectNegativeDiagonalAcrossGrids(self):
-        '''
-        works
-        '''
-        points = []
-        for i in range(self.numGrids):
-            points.append(self.boards[self.numGrids - (1 + i)].board[i][(self.numGrids - 1) - i])
-
-        if None not in points and len(set(points)) == 1:
-            return True
-        else:
-            return False
-
-    def checkWin(self):
-        if (self.detectHorizontalOnGrid() or 
-            self.detectHorizontalAcrossGrids() or 
-            self.detectVerticalOnGrid() or 
-            self.detectVerticalAcrossGrids() or 
-            self.detectPositiveDiagonalonGrid() or 
-            self.detectPositiveDiagonalAcrossGrids() or 
-            self.detectNegativeDiagonalonGrid() or
-            self.detectNegativeDiagonalAcrossGrids()):
-            return True
-        return False
-
-class CreateGridForMap:
-    def __init__(self, width, height, rows, cols, startX, startY):
-        self.width = width
-        self.height = height
-        self.rows = rows
-        self.cols = cols
-        self.margin = 5
-        self.startX = startX
-        self.startY = startY
-
-    def getCellBounds(self, row, col):
-        gridWidth  = self.width - 2*self.margin
-        gridHeight = self.height - 2*self.margin
-        cellWidth = gridWidth / self.cols
-        cellHeight = gridHeight / self.rows
-        x0 = self.startX + col * cellWidth
-        x1 = self.startX + (col+1) * cellWidth
-        y0 = self.startY + row * cellHeight
-        y1 = self.startY + (row+1) * cellHeight
-        return (x0, y0, x1, y1)
-
-class Minimax:
-    def __init__(self):
-        alpha = -math.inf
-        beta = math.inf
-
-    def initialize(self):
-        return
 
 def appStarted(app):
     app.selection = (-1, -1)
@@ -272,24 +36,44 @@ def generateBoards(app, num):
         elif num == 4:
             app.boards.append(ThreeDBoard(app.width, app.height, num, num, app.marginMultiplier + (2 * i)))
         elif num == 5:
-            app.boards.append(ThreeDBoard(app.width-100, app.height, num, num, app.marginMultiplier + (1.5 * i)))
+            app.boards.append(ThreeDBoard(app.width-100, app.height, num, num, app.marginMultiplier + (1.7 * i)))
 
 # checks if the user has clicked the appropriate point on the grid, and if
 # the click itself is on the grid
 def pointInGrid(app, x, y):
-    pointsList = []
+    firstBoardPointsList = []
     counter = 0
     board = app.boards[0]
-    for i in range(4):
-        pointsList.append(board.getCellBounds(i, 0))
-    for points in pointsList:
+    for i in range(len(app.boards) - 1):
+        firstBoardPointsList.append(board.getCellBounds(i, 0))
+    for points in firstBoardPointsList:
         (x0, y0, x1, y1, x2, y2, x3, y3) = points
+        print(x, y)
         if not(x0 <= x <= x0+((x2-x1)*board.cols) and y1 <= y <= y0):
             pass
         else:
             r = counter
             c = int((x - x0)/board.widthMargin)
             board.board[r][c] = "orange"
+            return (r, c)
+        counter += 1
+
+def pointInLastGrid(app, x, y):
+    lastBoardPointsList = []
+    counter = 0
+    lastBoard = app.boards[-1]
+
+    for i in range(4):
+        lastBoardPointsList.append(lastBoard.getCellBounds(i, 0))
+
+    for points in lastBoardPointsList:
+        (x0, y0, x1, y1, x2, y2, x3, y3) = points
+        if not(x0 <= x <= x0+((x2-x1)*lastBoard.cols) and y1 <= y <= y0):
+            pass
+        else:
+            r = counter
+            c = int((x - x0)/lastBoard.widthMargin)
+            lastBoard.board[r][c] = None
             return (r, c)
         counter += 1
 
@@ -312,8 +96,16 @@ def checkForOrange(app):
         app.bottomFacePoints.append([x0, y0, x1, y1, x2, y2, x3, y3])
         return
 
+def columnFull(app, x, y):
+    (row, col) = pointInGrid(app, x, y)
+    for board in app.boards[1:]:
+        if board.board[row][col] == None:
+            return False
+    return True
+
 def mousePressed(app, event):
     x, y = event.x, event.y
+    print(x, y)
     if pointToHelp(app, x, y):
         app.page = 4
     if app.page == 0:
@@ -336,8 +128,13 @@ def mousePressed(app, event):
         if pointToExit(app, x, y):
             app.page = 0
         app.bottomFacePoints.clear()
+        if pointInLastGrid(app, x, y) != None:
+            (row, col) = pointInLastGrid(app, x, y)
+            switchPlayers(app)
         if pointInGrid(app, event.x, event.y) == None:
             app.selection = (-1, -1)
+        elif columnFull(app, x, y):
+            return
         elif win.checkWin():
             return
         else:
@@ -362,6 +159,7 @@ def reached(app):
             if firstBoard.board[r][c] == "orange":
                 (row, col) = (r, c)
                 break
+
     possibleBoards = [i+1 for i in range(app.numGrids)]
     for boardNum in possibleBoards:
         if app.boards[boardNum].board[row][col] == None:
@@ -515,7 +313,7 @@ def drawHumanHumanGame(app, canvas):
                 canvas.create_polygon(x0, y0, x1, y1, x2, y2, x3, y3,
                 fill = "darkBlue", outline = "white")
 
-    for i in range(1, len(app.boards)):
+    for i in range(len(app.boards)-1, 0, -1):
         for row in range(board.rows-1, -1, -1):
             for col in range(board.cols):
                 if (app.boards[i].board[row][col] != None):
@@ -551,6 +349,7 @@ def drawExit(app, canvas):
 
     canvas.create_text(app.width//2, app.height-10, text="Exit")
 
+# add popping out thing to instructions
 def drawHelpScreen(app, canvas):
     canvas.create_rectangle(0, 0, app.width, app.height, fill="light blue")
     canvas.create_text(app.width//2, 40, text="Game Rules", font="Arial 20 bold",
