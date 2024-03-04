@@ -2,6 +2,10 @@
 
 Riya Bhatia
 
+# Demo Video
+
+https://youtu.be/N_1dvGgsRvk
+
 # About the Project
 
 3D ConnectO is a fast-paced, two-player game where players compete to connect a specified number of pieces on a 3D board. As the board is created in 2.5D, meaning that the board is an isometric projection, players can connect the number of pieces on a singular grid horizontally, vertically, or diagonally, or across multiple grids in the same fashion. The game features 3D pieces, a realistic visualization of pieces being placed on their respective boards, a 2D map to better visualize open spaces to place tokens, and an exciting twist: users can pop out any piece from the bottom grid, allowing the game to take an unexpected turn!
