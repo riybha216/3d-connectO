@@ -1,4 +1,4 @@
-# 3D ConnectO: Term Project for 15-112
+# 3D ConnectO: A Twist on Connect4!
 
 Riya Bhatia
 
