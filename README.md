@@ -1,7 +1,3 @@
-# 3D ConnectO: A Twist on Connect4!
-
-Riya Bhatia
-
 # Demo Video
 
 https://youtu.be/N_1dvGgsRvk
